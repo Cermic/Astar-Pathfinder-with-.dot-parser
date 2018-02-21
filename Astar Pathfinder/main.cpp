@@ -1,8 +1,4 @@
-
-
-
-
-//
+/*
 //=======================================================================
 // Copyright (c) 2004 Kristopher Beevers
 //
@@ -10,7 +6,14 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 //=======================================================================
-//
+
+
+Modified by Jack Smith (B00308927) and Greg Smith (B00308929) for use in 
+a project that searches through an undirected weighted graph.
+
+The information on the graph is read into the program by a .dot language 
+parser.
+*/
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/random.hpp>
@@ -23,7 +26,7 @@
 #include <list>
 #include <iostream>
 #include <fstream>
-#include <math.h>    // for sqrt
+#include <math.h> 
 #include <ctime>
 #include <cstdio>
 
@@ -77,11 +80,11 @@ private:
 
 // euclidean distance heuristic
 template <class Graph, class CostType, class LocMap>
-class distance_heuristic : public astar_heuristic<Graph, CostType>
+class euclidean_distance_heuristic : public astar_heuristic<Graph, CostType>
 {
 public:
 	typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
-	distance_heuristic(LocMap l, Vertex goal)
+	euclidean_distance_heuristic(LocMap l, Vertex goal)
 		: m_location(l), m_goal(goal) {}
 	CostType operator()(Vertex u)
 	{
@@ -131,6 +134,7 @@ private:
 };
 
 
+
 int main(int argc, char **argv)
 {
 	// specify some types
@@ -142,25 +146,22 @@ int main(int argc, char **argv)
 	typedef std::pair<int, int> edge;
 
 	location* locations = NULL;   // Pointer to int, initialize to nothing.
-
 	edge* edge_array = NULL;
-
 	cost* weights = NULL;
-
 	int* nodes = NULL;
 
-	std::string line;
-	int labelCounter = 0; // a counter for the labels to increment with
+	std::string line; // String for accepting line input from the file.
+	int weightCounter = 0; // a counter for the weights to increment with
 	int posCounter = 0; // a counter for the positions to increment with
-	int nodeCounter = 0;
-	int edgeCounter = 0;
+	int nodeCounter = 0; // a counter to count all the nodes in the file
+	int edgeCounter = 0; // a counter to count all the edges in the file
 	ifstream dotFile("random64_4_1517441833.dot"); // sets dotFile to a stream of the given file
 
 	 /*
 	 This loop counts all the lines that contain certain string portions and sets the size of the
-	 of the arrays appropriately. This makes it dynamic, the file could be any size up the max capacity of an array.
+	 of the arrays appropriately. This makes it dynamic and allows the file to be of varying size.
 
-	 labelCount for weights
+	 weightCount for weights
 	 posCount for locations
 	 nodeCount for nodes
 	 edgeCount for edges
@@ -168,13 +169,14 @@ int main(int argc, char **argv)
 	 */
 	if (dotFile.is_open())
 	{
-		int labelCount = 0; // holds the total number of labels
+		int weightCount = 0; // holds the total number of weights
 		int posCount = 0;   // holds the total number of positions
 		int nodeCount = 0;  // holds the total number of nodes
 		int edgeCount = 0;	// holds the total number of edges
 
 		while (getline(dotFile, line))
 		{
+			// When a tag is found the relevant count is incremented
 			if (line.find(",pos=") != string::npos)
 			{
 				posCount++;
@@ -183,10 +185,12 @@ int main(int argc, char **argv)
 
 			if (line.find("--") != string::npos)
 			{
-				labelCount++;
+				weightCount++;
 				edgeCount++;
 			}
 		}
+
+		// The array's size is defined by the count found earlier by the number of entries in the file
 		locations = new location[posCount]; // Allocate n ints and save ptr in a. // long / lat - ( X / Y )
 		for (int i = 0; i < posCount; i++)
 		{
@@ -194,8 +198,8 @@ int main(int argc, char **argv)
 			locations[i].y = 0;	// Initialize all elements to zero.
 		}
 
-		weights = new cost[labelCount]; // Allocate n ints and save ptr in a. // weights of edges
-		for (int i = 0; i < labelCount; i++)
+		weights = new cost[weightCount]; // Allocate n ints and save ptr in a. // weights of edges
+		for (int i = 0; i < weightCount; i++)
 		{
 			weights[i] = 0;	// Initialize all elements to zero.
 		}
@@ -212,15 +216,19 @@ int main(int argc, char **argv)
 			nodes[i] = 0;
 		}
 		dotFile.close(); // When no lines are left close the file
-	}
+	}// File checking is concluded.
 
+	/*
+		The file is reopened to allow parsing through it to populate the various arrays that will be 
+		traversed for use in generating a path through the graph.
+	*/
 	dotFile.open("random64_4_1517441833.dot");
 	if (dotFile.is_open())// If the file is open
 	{
-		labelCounter = 0; // a counter for the labels to increment with
+		weightCounter = 0; // a counter for the weights to increment with
 		posCounter = 0; // a counter for the positions to increment with
-		nodeCounter = 0;
-		edgeCounter = 0;
+		nodeCounter = 0; // a counter for the nodes to increment with
+		edgeCounter = 0; // a counter for the edges to increment with
 
 		while (getline(dotFile, line))// Get the line
 		{
@@ -240,26 +248,25 @@ int main(int argc, char **argv)
 				// Assigns weight the characters starting at findComma +1 which is the character after the " until the position 
 				// of the last " -1 . This should include all of the x coord
 
-				locations[posCounter].x = std::strtof((xCoord).c_str(), 0);
-				locations[posCounter].y = std::strtof((yCoord).c_str(), 0);
+				locations[posCounter].x = std::strtof((xCoord).c_str(), 0); // Inputs the number found to the x cord of the position value
+				locations[posCounter].y = std::strtof((yCoord).c_str(), 0); // Inputs the number found to the y cord of the position value
 				posCounter++;
 
-				std::size_t pos2 = line.find_first_of('[');
-				std::string nodeFound = line.substr(0, (pos2));
-				nodes[nodeCounter] = std::stoi(nodeFound);
+				std::size_t pos2 = line.find_first_of('['); // Finds the position of the first [ in the string
+				std::string nodeFound = line.substr(0, (pos2)); // Sets the nodeFound string to the starting position on the string to pos2
+				nodes[nodeCounter] = std::stoi(nodeFound);// inserts node found at the nodecounter position in the array.
 				nodeCounter++;
-
 			}
 
 			if (line.find("--") != string::npos)
 			{
-				std::size_t foundFirstEdge = line.find_first_of('-');// Gets the position of the first 
-				std::string fNSplit = line.substr(0, (foundFirstEdge));
+				std::size_t foundFirstEdge = line.find_first_of('-');// Gets the position of the first -
+				std::string fNSplit = line.substr(0, (foundFirstEdge));// Sets the string to the first position until the position of foundFirstEdge on the line
 				std::size_t foundSecondEdge = line.find_last_of('-'); // Gets the position of the first - from the back of the string
-				std::size_t foundFirstWhiteSpace = line.find_first_of(' ');
-				std::string sNSplit = line.substr((foundSecondEdge + 1), (foundFirstWhiteSpace - 3));
+				std::size_t foundFirstWhiteSpace = line.find_first_of(' '); // finds the first whitespace position
+				std::string sNSplit = line.substr((foundSecondEdge + 1), (foundFirstWhiteSpace - 3)); // Sets the string to the foundSecondEdge position until the position of firstFoundEdge on the line
 
-				edge_array[edgeCounter] = edge(std::stoi(fNSplit), std::stoi(sNSplit));
+				edge_array[edgeCounter] = edge(std::stoi(fNSplit), std::stoi(sNSplit)); // inserts an edge into the array at edgeCounter position
 				edgeCounter++;
 
 				if (line.find(',') != string::npos)
@@ -274,8 +281,8 @@ int main(int argc, char **argv)
 					// of ((findLast-1) - findFirst)) which is the difference between the two corrected to extract only the numbers
 					// this makes sure the amount of numbers between them is irrelevant.
 
-					weights[labelCounter] = std::strtof((weight).c_str(), 0);
-					labelCounter++;
+					weights[weightCounter] = std::strtof((weight).c_str(), 0); // Sets the weight of the node to the position of weight counter in the array
+					weightCounter++;
 				}
 			}
 		}
@@ -324,12 +331,12 @@ int main(int argc, char **argv)
 	vector<mygraph_t::vertex_descriptor> p(num_vertices(g));
 	vector<cost> d(num_vertices(g));
 
-	//distance heuristic//
+	//Euclidean distance heuristic//
 	try {
 		// call astar named parameter interface
 		astar_search_tree
 		(g, start,
-			distance_heuristic<mygraph_t, cost, location*>
+			euclidean_distance_heuristic<mygraph_t, cost, location*>
 			(locations, goal),
 			predecessor_map(make_iterator_property_map(p.begin(), get(vertex_index, g))).
 			distance_map(make_iterator_property_map(d.begin(), get(vertex_index, g))).
@@ -342,7 +349,7 @@ int main(int argc, char **argv)
 			if (p[v] == v)
 				break;
 		}
-		cout << "Using Distance hueristic:" << "\n";
+		cout << "Using Euclidean Distance hueristic:" << "\n";
 		cout << "Shortest path from " << nodes[start] << " to "
 			<< nodes[goal] << ": ";
 		list<vertex>::iterator spi = shortest_path.begin();
