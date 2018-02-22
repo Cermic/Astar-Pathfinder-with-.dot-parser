@@ -117,8 +117,7 @@ private:
 };
 
 struct found_goal {}; // exception for termination
-
-					  // visitor that terminates when we find the goal
+				  // visitor that terminates when we find the goal
 template <class Vertex>
 class astar_goal_visitor : public boost::default_astar_visitor
 {
@@ -132,8 +131,6 @@ public:
 private:
 	Vertex m_goal;
 };
-
-
 
 int main(int argc, char **argv)
 {
@@ -155,8 +152,25 @@ int main(int argc, char **argv)
 	int posCounter = 0; // a counter for the positions to increment with
 	int nodeCounter = 0; // a counter to count all the nodes in the file
 	int edgeCounter = 0; // a counter to count all the edges in the file
-	ifstream dotFile("random64_4_1517441833.dot"); // sets dotFile to a stream of the given file
+	string fileName;
+	
+	
+	cout << "Please define the relative file path for the .dot file..." << "\n"
+		<< "You will need to use ../ for every subfolder removed the .dot file is from the" << "\n" 
+		<< "Astar-PathFinder class." << "\n" << "\n"
+		<< "Eg ../example.dot would be one folder up in the structure."<< "\n"
+		 << endl;
+	cin >> fileName; // sets dotFile to a stream of the given file
+	ifstream dotFile;
 
+	dotFile.open(fileName.c_str());
+	while (!dotFile.is_open())
+	{
+		cout << "File not opened, did you type the path correctly?" << "\n"
+			"Please try again." << "\n" << endl;
+		cin >> fileName;
+		dotFile.open(fileName.c_str());
+	}
 	 /*
 	 This loop counts all the lines that contain certain string portions and sets the size of the
 	 of the arrays appropriately. This makes it dynamic and allows the file to be of varying size.
@@ -222,7 +236,7 @@ int main(int argc, char **argv)
 		The file is reopened to allow parsing through it to populate the various arrays that will be 
 		traversed for use in generating a path through the graph.
 	*/
-	dotFile.open("random64_4_1517441833.dot");
+	dotFile.open(fileName.c_str());
 	if (dotFile.is_open())// If the file is open
 	{
 		weightCounter = 0; // a counter for the weights to increment with
@@ -290,7 +304,7 @@ int main(int argc, char **argv)
 		dotFile.close(); // When no lines are left close the file
 	}
 
-	else cout << "Unable to open file"; // Print if file cannot be opened for any reason.
+	else cout << "Unable to open file" << "\n" << endl; // Print if file cannot be opened for any reason.
 
 	// create graph
 	mygraph_t g(nodeCounter);
@@ -302,12 +316,34 @@ int main(int argc, char **argv)
 		weightmap[e] = weights[j];
 	}
 	// User defines start and end vertexs.
+	int startVertex = 0, endVertex = 0;
+	/*
+		Ensures the input given won't be allowed to be lower than 0
+		or higher than the number of nodes in the graph.
+	*/
+	do
+	{
+		if (startVertex < 0 || startVertex >(nodeCounter - 1))
+		{
+			cout << "Invalid input, please input start vertex again" << "\n" << endl;
+		}
+		cout << "Define start vertex between " << "0 " << "and " << (nodeCounter - 1) << endl;
+		cin >> startVertex;
+	} while (startVertex < 0 || startVertex > (nodeCounter-1));
 
-	cout << "Define start vertex between " << "0 " << "and " << (nodeCounter - 1) << endl;
-	int startVertex, endVertex;
-	cin >> startVertex;
-	cout << "Define end vertex between " << "0 " << "and " << (nodeCounter - 1) << endl;
-	cin >> endVertex;
+	/*
+		Ensures the input given won't be allowed to be lower than 0
+		or higher than the number of nodes in the graph.
+	*/
+	do
+	{
+		if (endVertex < 0 || endVertex >(nodeCounter - 1))
+		{
+			cout << "Invalid input, please input start vertex again" << "\n" << endl;
+		}
+		cout << "Define end vertex between " << "0 " << "and " << (nodeCounter - 1) << endl;
+		cin >> endVertex;
+	} while (endVertex < 0 || endVertex >(nodeCounter - 1));
 
 	vertex start = (g, startVertex);
 	vertex goal = (g, endVertex);
