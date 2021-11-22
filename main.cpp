@@ -152,15 +152,14 @@ int main(int argc, char **argv)
 	int posCounter = 0; // a counter for the positions to increment with
 	int nodeCounter = 0; // a counter to count all the nodes in the file
 	int edgeCounter = 0; // a counter to count all the edges in the file
-	string fileName;
-	
+	string fileName = "/files/random64_4_1517441833.dot";
 	
 	cout << "Please define the relative file path for the .dot file..." << "\n"
 		<< "You will need to use ../ for every subfolder removed the .dot file is from the" << "\n" 
 		<< "Astar-PathFinder class." << "\n" << "\n"
 		<< "Eg ../example.dot would be one folder up in the structure."<< "\n"
 		 << endl;
-	cin >> fileName; // sets dotFile to a stream of the given file
+	cin >> fileName;
 	ifstream dotFile;
 
 	dotFile.open(fileName.c_str());
