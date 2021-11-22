@@ -1,0 +1,8 @@
+{
+    "name": "A-Star-Pathfinding",
+    "version": "1.0.0",
+    "builtin-baseline": "f33d743a757fc50da77a2bd3a4cf5d55c4f5e02f",
+    "dependencies": [
+      { "name": "boost[graph]", "version>=": "1.77.0" },
+    ]
+  }
