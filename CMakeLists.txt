@@ -9,6 +9,6 @@ find_package(Boost REQUIRED COMPONENTS graph)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost Boost::graph)
